@@ -6,8 +6,9 @@ A RESTful backend for a CRM that manages the complete sales process:
 
 Built with **Node.js, Express 5, MongoDB (Mongoose) and Zod**. It includes JWT authentication, role-based access control, transactional lead conversion, business rules enforced on the server, an audit timeline, and analytics built with aggregation pipelines.
 
-> **Live API:** `https://<your-app>.onrender.com/api`  ← replace after deployment
-> **Health check:** `GET /api/health`
+> **Live API:** https://crm-backend-352l.onrender.com/api
+> **Health check:** https://crm-backend-352l.onrender.com/api/health
+> Hosted on Render's free plan: the first request after ~15 minutes of inactivity can take 30–50 seconds while the server wakes up.
 
 ---
 
@@ -166,7 +167,8 @@ A record outside the user's scope returns **404** (not 403), so IDs belonging to
 ## 8. API reference
 
 Base URL: `/api`. All routes except health, register, login and refresh require `Authorization: Bearer <token>`.
-Full request and response examples are in **`CRM-Sales-Management.postman_collection.json`** (import it into Postman, then send *Auth / Login (Admin)* first).
+- **Sample requests and responses:** [`docs/API_EXAMPLES.md`](docs/API_EXAMPLES.md)
+- **Postman collection:** `CRM-Sales-Management.postman_collection.json` (56 requests with descriptions and example bodies). Import it into Postman, send *Auth / Login (Admin)* first, then run the folders in order. The "Create" requests save the new IDs automatically.
 
 ### Auth
 | Method | Endpoint | Description |
@@ -390,7 +392,7 @@ Deployed on **Render** (free web service) with **MongoDB Atlas**:
 3. Build command: `npm install`. Start command: `npm start`.
 4. Add the environment variables from section 4, with `NODE_ENV=production` and new secrets.
 5. In Atlas **Network Access**, allow `0.0.0.0/0`.
-6. After deploying, check `https://<app>.onrender.com/api/health`. To get demo data, run `npm run seed -- --fresh` locally with the production `MONGO_URI`.
+6. After deploying, check https://crm-backend-352l.onrender.com/api/health. To get demo data, run `npm run seed -- --fresh` locally with the production `MONGO_URI`.
 
 `app.set('trust proxy', 1)` is enabled so the rate limiter and secure cookies work correctly behind Render's proxy.
 
