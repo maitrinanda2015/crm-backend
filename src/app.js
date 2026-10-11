@@ -16,6 +16,7 @@ const customerRoutes = require('./routes/customer.routes');
 const dealRoutes = require('./routes/deal.routes');
 const activityRoutes = require('./routes/activity.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const settingsRoutes = require('./routes/settings.routes');
 
 const app = express();
 app.set('trust proxy', 1); // needed behind Render's proxy (rate limit + secure cookies)
@@ -51,6 +52,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/deals', dealRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // ---------- 404 for unknown routes ----------
 app.use((req, res, next) => {

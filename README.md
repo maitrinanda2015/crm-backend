@@ -6,9 +6,8 @@ A RESTful backend for a CRM that manages the complete sales process:
 
 Built with **Node.js, Express 5, MongoDB (Mongoose) and Zod**. It includes JWT authentication, role-based access control, transactional lead conversion, business rules enforced on the server, an audit timeline, and analytics built with aggregation pipelines.
 
-> **Live API:** https://crm-backend-352l.onrender.com/api
-> **Health check:** https://crm-backend-352l.onrender.com/api/health
-> Hosted on Render's free plan: the first request after ~15 minutes of inactivity can take 30–50 seconds while the server wakes up.
+> **Live API:** `https://<your-app>.onrender.com/api`  ← replace after deployment
+> **Health check:** `GET /api/health`
 
 ---
 
@@ -163,12 +162,14 @@ A record outside the user's scope returns **404** (not 403), so IDs belonging to
 | Reopen a Won/Lost deal (with reason) | ✅ | ❌ | ❌ |
 | Dashboard stats and pipeline | ✅ all | ✅ team | ✅ own |
 | Team performance | ✅ | ✅ | ❌ |
+| View CRM configuration (`GET /settings`) | ✅ | ✅ | ✅ |
+| Manage CRM configuration (`PATCH /settings`) | ✅ | ❌ | ❌ |
 
 ## 8. API reference
 
 Base URL: `/api`. All routes except health, register, login and refresh require `Authorization: Bearer <token>`.
 - **Sample requests and responses:** [`docs/API_EXAMPLES.md`](docs/API_EXAMPLES.md)
-- **Postman collection:** `CRM-Sales-Management.postman_collection.json` (56 requests with descriptions and example bodies). Import it into Postman, send *Auth / Login (Admin)* first, then run the folders in order. The "Create" requests save the new IDs automatically.
+- **Postman collection:** `CRM-Sales-Management.postman_collection.json` (58 requests with descriptions and example bodies). Import it into Postman, send *Auth / Login (Admin)* first, then run the folders in order. The "Create" requests save the new IDs automatically.
 
 ### Auth
 | Method | Endpoint | Description |
@@ -234,6 +235,12 @@ Base URL: `/api`. All routes except health, register, login and refresh require 
 | PATCH | `/activities/:id` | Update title, description, dueDate, assignedTo |
 | PATCH | `/activities/:id/complete` | Mark completed (optional `outcome`) |
 | DELETE | `/activities/:id` | Delete |
+
+### Settings (CRM configuration)
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/settings` | Current CRM configuration: `companyName`, `currency`, default `stageProbabilities` (all roles) |
+| PATCH | `/settings` | Update configuration (admin only). Stage probabilities must be 0–100 and must not decrease along the pipeline |
 
 ### Dashboard
 | Method | Endpoint | Description |
@@ -303,7 +310,7 @@ All dashboard endpoints accept optional `from` / `to` and are scoped by role.
 ### Deals
 - `value > 0`; `probability` 0–100.
 - **`expectedRevenue = value × probability / 100` is always calculated by the server** (Mongoose `pre('validate')` hook); a client-sent value is ignored.
-- Default probability per stage: Qualification 10, Discovery 25, Proposal 50, Negotiation 75, Won 100, Lost 0.
+- Default probability per stage: Qualification 10, Discovery 25, Proposal 50, Negotiation 75, Won 100, Lost 0. The admin can change the four active-stage defaults through `PATCH /settings` (CRM configuration). New deals, conversions and stage changes use the configured values unless a `probability` is sent; Won (100) and Lost (0) are fixed.
 - `expectedCloseDate` cannot be in the past and must be within 5 years.
 - **Won** requires an active customer and a positive value; it sets probability 100, status `Won` and `closedAt`.
 - **Lost** requires a `lostReason`; it sets probability 0, status `Lost` and `closedAt`.
@@ -348,6 +355,7 @@ Timeline (entityType + entityId) -> Lead | Customer | Deal
 | **customers** | name, email, phone, company, address (embedded), status | `lead` → Lead (unique, sparse); `assignedTo`, `createdBy` → User; virtual `deals` |
 | **deals** | name, value, probability, expectedRevenue, expectedCloseDate, stage, status, lostReason, closedAt | `customer` → Customer; `lead` → Lead; `assignedTo`, `createdBy` → User |
 | **activities** | type, title, description, status, dueDate, completedAt, outcome | `relatedType` + `relatedId` (polymorphic, `refPath`) → Lead/Customer/Deal/User; `assignedTo`, `createdBy` → User |
+| **settings** | key (`crm`, unique), companyName, currency, stageProbabilities, updatedAt | `updatedBy` → User (single configuration document) |
 | **timelines** | action, entityType, entityId, previousValue, newValue, createdAt | `performedBy` → User; polymorphic `entityType` + `entityId` |
 
 **References vs embedding**
@@ -392,7 +400,7 @@ Deployed on **Render** (free web service) with **MongoDB Atlas**:
 3. Build command: `npm install`. Start command: `npm start`.
 4. Add the environment variables from section 4, with `NODE_ENV=production` and new secrets.
 5. In Atlas **Network Access**, allow `0.0.0.0/0`.
-6. After deploying, check https://crm-backend-352l.onrender.com/api/health. To get demo data, run `npm run seed -- --fresh` locally with the production `MONGO_URI`.
+6. After deploying, check `https://<app>.onrender.com/api/health`. To get demo data, run `npm run seed -- --fresh` locally with the production `MONGO_URI`.
 
 `app.set('trust proxy', 1)` is enabled so the rate limiter and secure cookies work correctly behind Render's proxy.
 

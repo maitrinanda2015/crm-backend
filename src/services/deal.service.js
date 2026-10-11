@@ -6,6 +6,7 @@ const ApiError = require('../utils/ApiError');
 const timeline = require('./timeline.service');
 const { validateAssignee } = require('../utils/assignment');
 const { getAccessibleCustomer } = require('./customer.service');
+const settingsService = require('./settings.service');
 const { ROLES, TIMELINE_ACTIONS: A } = require('../config/constants');
 const { CLOSED_STAGES } = require('../validators/deal.validator');
 const { getAccessFilter } = require('../utils/access');
@@ -50,8 +51,12 @@ const createDeal = async (data, user) => {
     await validateAssignee(assignedTo, user);
   }
 
+  // Default probability comes from the CRM configuration (admin-managed settings)
+  const probability = data.probability ?? (await settingsService.getStageProbability(data.stage || 'Qualification'));
+
   const deal = await Deal.create({
     ...data,
+    probability,
     lead: customer.lead || null, // keep the Lead -> Customer -> Deal chain
     assignedTo,
     createdBy: user._id,
@@ -181,7 +186,7 @@ const changeStage = async (id, { stage, probability, lostReason, reason }, user)
   } else {
     deal.closedAt = undefined;
     deal.lostReason = undefined;
-    deal.probability = probability ?? Deal.STAGE_PROBABILITY[stage];
+    deal.probability = probability ?? (await settingsService.getStageProbability(stage)); // from CRM settings
   }
   await deal.save(); // pre-validate hook sets probability for Won/Lost + recalculates revenue
 

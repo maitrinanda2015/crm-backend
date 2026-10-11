@@ -2364,6 +2364,82 @@
       ]
     },
     {
+      "name": "Settings (CRM configuration)",
+      "description": "CRM configuration. Everyone can read it; only admins can change it. Stage probabilities are used as the default probability when a deal is created or moves stage.",
+      "item": [
+        {
+          "name": "Get CRM settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "All roles. Returns companyName, currency and default stage probabilities."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update CRM settings (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Admin only (403 for others). currency: 3-letter ISO code. Stage probabilities 0-100 and must not decrease along the pipeline (Qualification <= Discovery <= Proposal <= Negotiation). Won/Lost stay fixed at 100/0.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Acme CRM\",\n  \"currency\": \"INR\",\n  \"stageProbabilities\": {\n    \"Qualification\": 10,\n    \"Discovery\": 30,\n    \"Proposal\": 55,\n    \"Negotiation\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Dashboard",
       "description": "Sales analytics built with aggregation pipelines. All endpoints are role-scoped and accept optional `from` / `to` (createdAt range).",
       "item": [

@@ -6,6 +6,7 @@ const ApiError = require('../utils/ApiError');
 const timeline = require('./timeline.service');
 const { getAccessFilter } = require('../utils/access');
 const { TIMELINE_ACTIONS: A } = require('../config/constants');
+const settingsService = require('./settings.service');
 
 /**
  * Converts a Qualified lead into a Customer (+ optional Deal) atomically.
@@ -13,7 +14,11 @@ const { TIMELINE_ACTIONS: A } = require('../config/constants');
  * all writes are rolled back and the lead stays Qualified.
  */
 const convertLead = async (leadId, data, user) => {
-  const access = await getAccessFilter(user);
+    const access = await getAccessFilter(user);
+  const defaultProbability =
+    data.deal && data.deal.probability === undefined
+      ? await settingsService.getStageProbability(data.deal.stage || 'Qualification')
+      : undefined;
   const session = await mongoose.startSession();
 
   try {
@@ -52,8 +57,9 @@ const convertLead = async (leadId, data, user) => {
       if (data.deal) {
         [deal] = await Deal.create(
           [
-            {
+                      {
               ...data.deal,
+              probability: data.deal.probability ?? defaultProbability,
               lead: lead._id,
               customer: customer._id,
               assignedTo: lead.assignedTo,
