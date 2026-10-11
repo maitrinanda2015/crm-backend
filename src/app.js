@@ -41,6 +41,29 @@ app.use(
 );
 
 // ---------- Routes ----------
+// Welcome routes (so the deployed link shows something useful)
+const welcome = (req, res) => {
+  res.json({
+    success: true,
+    message: 'CRM Sales Management API is running',
+    version: '1.0.0',
+    baseUrl: '/api',
+    endpoints: {
+      health: 'GET /api/health',
+      auth: '/api/auth (register, login, refresh, logout, me)',
+      users: '/api/users',
+      leads: '/api/leads',
+      customers: '/api/customers',
+      deals: '/api/deals',
+      activities: '/api/activities',
+      settings: '/api/settings',
+      dashboard: '/api/dashboard (stats, pipeline, team-performance)',
+    },
+    docs: 'See README.md and the Postman collection in the GitHub repository',
+  });
+};
+app.get('/', welcome);
+app.get('/api', welcome);
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'CRM API is running' });
 });
